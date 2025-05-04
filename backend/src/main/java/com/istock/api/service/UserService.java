@@ -1,0 +1,52 @@
+package com.istock.api.service;
+
+import com.istock.api.model.User;
+import com.istock.api.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public Optional<User> getUserById(String id) {
+        return userRepository.findById(id);
+    }
+
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    public User saveUser(User user) {
+        // Only encode password if it's a new user or password has been changed
+        if (user.getId() == null || user.getPassword() != null && !user.getPassword().startsWith("$2a$")) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        return userRepository.save(user);
+    }
+
+    public void deleteUser(String id) {
+        userRepository.deleteById(id);
+    }
+
+    public List<User> getUsersByStatus(String status) {
+        return userRepository.findByStatus(status);
+    }
+
+    public List<User> getUsersByRole(String role) {
+        return userRepository.findByRole(role);
+    }
+}
