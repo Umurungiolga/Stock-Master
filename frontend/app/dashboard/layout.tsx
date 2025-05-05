@@ -1,37 +1,31 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardSidebar } from "@/components/dashboard/sidebar"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Loader2 } from "lucide-react"
+import { useAuth } from "@/context/AuthConfig"
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [isLoading, setIsLoading] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null)
+  const { user, isLoading, isAuthenticated, checkAuth } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem("token")
-    if (!token) {
-      router.push("/auth/login")
-    } else {
-      // Get user data from localStorage
-      const userData = localStorage.getItem("user")
-      if (userData) {
-        setUser(JSON.parse(userData))
+    const verifyAuth = async () => {
+      const authenticated = await checkAuth()
+      if (!authenticated) {
+        router.push("/auth/login")
       }
-      setIsLoading(false)
     }
-  }, [router])
+    
+    verifyAuth()
+  }, [checkAuth, router])
 
   if (isLoading) {
     return (
@@ -39,6 +33,11 @@ export default function DashboardLayout({
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
+  }
+
+  // If not loading and not authenticated, the useEffect will handle the redirect
+  if (!isAuthenticated) {
+    return null
   }
 
   return (
@@ -49,7 +48,14 @@ export default function DashboardLayout({
         userRole={user?.role || "user"}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <DashboardHeader onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} user={user} />
+        <DashboardHeader 
+          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+          user={user ? {
+            name: user.name,
+            email: user.email,
+            role: user.role
+          } : null} 
+        />
         <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
       </div>
     </div>

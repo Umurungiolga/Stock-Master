@@ -1,12 +1,13 @@
 package com.istock.api.service;
 
+import com.istock.api.Repositories.UserRepository;
 import com.istock.api.model.Order;
 import com.istock.api.model.Product;
 import com.istock.api.model.User;
 import com.istock.api.model.dto.DashboardStats;
 import com.istock.api.repository.OrderRepository;
 import com.istock.api.repository.ProductRepository;
-import com.istock.api.repository.UserRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

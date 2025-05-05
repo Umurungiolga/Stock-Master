@@ -4,15 +4,15 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { Eye, EyeOff, Loader2, AlertCircle, ShieldAlert } from "lucide-react"
-import { signup } from "@/lib/api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useAuth } from "@/context/AuthConfig"
+
 
 export default function SignupPage() {
   const [name, setName] = useState("")
@@ -22,8 +22,8 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [passwordError, setPasswordError] = useState("")
-  const router = useRouter()
   const { toast } = useToast()
+  const { register } = useAuth()
 
   // Password validation
   useEffect(() => {
@@ -63,30 +63,25 @@ export default function SignupPage() {
       return
     }
 
-    // Check if trying to sign up as admin with wrong email
-    const isAdminAttempt = email.toLowerCase() !== "umurungiolga12@gmail.com"
-
     setIsLoading(true)
 
     try {
-      // Only the specified email can be an admin
-      const role = email.toLowerCase() === "umurungiolga12@gmail.com" ? "admin" : "user"
-
-      const response = await signup(name, email, password, role)
-
-      if (response.success) {
-        toast({
-          title: "Account created successfully",
-          description: "You can now log in with your credentials.",
-        })
-        router.push("/auth/login")
-      } else {
-        throw new Error("Failed to create account")
-      }
-    } catch (error) {
+      // Call the register function from auth context
+      await register({
+        name,
+        email,
+        password
+      })
+      
+      toast({
+        title: "Account created successfully",
+        description: "You can now log in with your credentials.",
+      })
+      // No need to manually redirect as the AuthProvider handles this
+    } catch (error: any) {
       toast({
         title: "Registration failed",
-        description: "There was an error creating your account. Please try again.",
+        description: error.message || "There was an error creating your account. Please try again.",
         variant: "destructive",
       })
     } finally {

@@ -1,6 +1,3 @@
-// Updated API functions to use the Next.js API routes
-
-// Authentication
 export async function login(email: string, password: string) {
   try {
     const response = await fetch("/api/auth/login", {
@@ -9,27 +6,47 @@ export async function login(email: string, password: string) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, password }),
-    })
+    });
+
+    const data = await response.json();
 
     if (!response.ok) {
-      throw new Error("Login failed")
+      throw new Error(data.message || "Login failed");
     }
 
-    const data = await response.json()
+    // Validate response structure
+    if (!data.token || !data.email || !data.name || !data.role) {
+      throw new Error("Invalid server response structure");
+    }
 
-    // Store user data in localStorage for persistence
-    localStorage.setItem("user", JSON.stringify(data.user))
+    // Create user object from response
+    const userData = {
+      name: data.name,
+      email: data.email,
+      role: data.role
+    };
 
-    return data
+    // Store in localStorage
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("token", data.token);
+
+    return {
+      user: userData,
+      token: data.token
+    };
+
   } catch (error) {
-    console.error("Login error:", error)
-    throw error
+    console.error("Login error:", error);
+    // Clear any partial data
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    throw error;
   }
 }
 
 export async function signup(name: string, email: string, password: string, role = "user") {
   try {
-    const response = await fetch("/api/auth/signup", {
+    const response = await fetch("/api/auth/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

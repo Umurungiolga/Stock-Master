@@ -4,44 +4,41 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
-import { login } from "@/lib/api"
+import { useAuth } from "@/context/AuthConfig"
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
   const { toast } = useToast()
+  const { login } = useAuth() // Use the auth context
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      const response = await login(email, password)
-
-      if (response.token) {
-        localStorage.setItem("token", response.token)
-        toast({
-          title: "Login successful",
-          description: "Welcome back to StockMaster!",
-        })
-        router.push("/dashboard")
-      } else {
-        throw new Error("Invalid credentials")
-      }
-    } catch (error) {
+      // Use the login function from the auth context
+      await login({ email, password })
+      
+      toast({
+        title: "Login successful",
+        description: "Welcome back to StockMaster!",
+      })
+      
+      // Note: No need to manually redirect as the AuthProvider handles this
+    } catch (error: any) {
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: error.message || "Please check your credentials and try again.",
         variant: "destructive",
       })
     } finally {
